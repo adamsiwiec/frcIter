@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <string>
+#include <array>
+
 
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
@@ -19,7 +21,7 @@
 #include <DoubleSolenoid.h>
 #include <RobotDrive.h>
 #include <GenericHID.h>
-
+#include <Drive/DifferentialDrive.h>
 
 class Robot : public frc::IterativeRobot {
 public:
@@ -27,6 +29,10 @@ public:
 		m_chooser.AddDefault(kAutoNameDefault, kAutoNameDefault);
 		m_chooser.AddObject(kAutoNameCustom, kAutoNameCustom);
 		frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+		for (std::size_t i = 0; i < arrX.size(); i++) {
+			arrX[i] = 0.0;
+			arrY[i] = 0.0;
+		}
 	}
 
 	/*
@@ -67,11 +73,23 @@ public:
 	void TeleopInit() {
 
 
-
 	}
 
 	void TeleopPeriodic() {
-		m_robotDrive.ArcadeDrive(m_joystick.GetY(), m_joystick.GetX());
+		double limit = m_joystick.GetRawAxis(3) + 1.0;
+		double speedY = m_joystick.GetY();
+		double speedX = m_joystick.GetX();
+
+
+		arrX = pushAndPop(arrX, speedX);
+		arrY = pushAndPop(arrY, speedY);
+
+		speedX = average(arrX);
+		speedY= average(arrY);
+
+
+
+		m_robotDrive.ArcadeDrive(limit * 0.5 * speedY,limit * 0.5 * speedX);
 		m_lift.Set(m_controller.GetRawAxis(5));
 		if (m_controller.GetRawButton(6)) {
 		p_lift.Set(frc::DoubleSolenoid::kForward);
@@ -104,7 +122,31 @@ private:
 	frc::Spark m_intake{4};
 
 
-	frc::RobotDrive m_robotDrive{m_left, m_right};
+	frc::DifferentialDrive m_robotDrive{m_left, m_right};
+
+	std::array< double, 5> arrX;
+	std::array< double, 5> arrY;
+
+	std::array<double, 5> pushAndPop(std::array<double, 5> arr, double value ) {
+
+			for(std::size_t i = 1; i < arr.size(); i++) {
+				arr[i] = arr[i-1];
+			}
+			arr[0] = value;
+
+			return arr;
+		}
+
+	double average(std::array<double, 5> arr) {
+		double sum = 0.0;
+		 for (std::size_t i = 0; i < arr.size(); i++) {
+		        sum += arr[i];
+		    }
+
+		    return sum / arr.size();
+	}
+
+
 
 
 };
