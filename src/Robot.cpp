@@ -33,6 +33,8 @@ public:
 			arrX[i] = 0.0;
 			arrY[i] = 0.0;
 		}
+		m_left.SetSafetyEnabled(false);
+		m_right.SetSafetyEnabled(false);
 	}
 
 	/*
@@ -50,6 +52,8 @@ public:
 	 * well.
 	 */
 	void AutonomousInit() override {
+		m_timer.Reset();
+		m_timer.Start();
 		m_autoSelected = m_chooser.GetSelected();
 		// m_autoSelected = SmartDashboard::GetString(
 		// 		"Auto Selector", kAutoNameDefault);
@@ -59,6 +63,8 @@ public:
 			// Custom Auto goes here
 		} else {
 			// Default Auto goes here
+
+
 		}
 	}
 
@@ -67,11 +73,15 @@ public:
 			// Custom Auto goes here
 		} else {
 			// Default Auto goes here
+			if (m_timer.Get() < 5.0) {
+							m_robotDrive.ArcadeDrive(0.5,0.0);
+						}
 		}
 	}
 
 	void TeleopInit() {
-
+//		stopWatch = new frc::Timer();
+//		stopWatch.Start();
 
 	}
 
@@ -84,19 +94,24 @@ public:
 		arrX = pushAndPop(arrX, speedX);
 		arrY = pushAndPop(arrY, speedY);
 
+
 		speedX = average(arrX);
 		speedY= average(arrY);
 
+		std::cout << speedX << std::endl;
+		std::cout << speedY << std::endl;
 
+//		stopWatch.Delay(0.005);
 
-		m_robotDrive.ArcadeDrive(limit * 0.5 * speedY,limit * 0.5 * speedX);
-		m_lift.Set(m_controller.GetRawAxis(5));
-		if (m_controller.GetRawButton(6)) {
-		p_lift.Set(frc::DoubleSolenoid::kForward);
-		} else if (m_controller.GetRawButton(7)) {
-		p_lift.Set(frc::DoubleSolenoid::kReverse);
-		}
-		m_intake.Set(m_controller.GetRawAxis(3));
+		//m_robotDrive.ArcadeDrive(limit * 0.5 * speedY, limit * 0.5 * speedX);
+		m_robotDrive.TankDrive(m_joystick.GetY(),m_controller.GetY());
+//		m_lift.Set(m_controller.GetRawAxis(5));
+//		if (m_controller.GetRawButton(6)) {
+//		p_lift.Set(frc::DoubleSolenoid::kForward);
+//		} else if (m_controller.GetRawButton(7)) {
+//		p_lift.Set(frc::DoubleSolenoid::kReverse);
+//		}
+//		m_intake.Set(m_controller.GetRawAxis(3));
 
 
 	}
@@ -114,20 +129,20 @@ private:
 	frc::JoystickButton j_12{&m_joystick, 12};
 	frc::Joystick m_controller{1};
 	frc::JoystickButton c_6{&m_controller, 6};
-	frc::DoubleSolenoid p_lift{1, 2};
+//	frc::DoubleSolenoid p_lift{1, 2};
 
 	frc::Spark m_left{1};
 	frc::Spark m_right{2};
 	frc::Spark m_lift{3};
 	frc::Spark m_intake{4};
-
+	frc::Timer m_timer;
 
 	frc::DifferentialDrive m_robotDrive{m_left, m_right};
 
-	std::array< double, 5> arrX;
-	std::array< double, 5> arrY;
+	std::array< double, 1000> arrX;
+	std::array< double, 1000> arrY;
 
-	std::array<double, 5> pushAndPop(std::array<double, 5> arr, double value ) {
+	std::array<double, 1000> pushAndPop(std::array<double, 1000> arr, double value ) {
 
 			for(std::size_t i = 1; i < arr.size(); i++) {
 				arr[i] = arr[i-1];
@@ -137,7 +152,7 @@ private:
 			return arr;
 		}
 
-	double average(std::array<double, 5> arr) {
+	double average(std::array<double, 1000> arr) {
 		double sum = 0.0;
 		 for (std::size_t i = 0; i < arr.size(); i++) {
 		        sum += arr[i];
