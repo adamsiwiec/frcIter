@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <array>
+#include <thread>
 
 
 #include <IterativeRobot.h>
@@ -22,9 +23,44 @@
 #include <RobotDrive.h>
 #include <GenericHID.h>
 #include <Drive/DifferentialDrive.h>
+#include <CameraServer.h>
+
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 class Robot : public frc::IterativeRobot {
 public:
+	static void VisionThread() {
+			// Get the USB camera from CameraServer
+			// Set the resolution
+
+			// Get a CvSink. This will capture Mats from the Camera
+			// Setup a CvSource. This will send images back to the Dashboard
+
+			// Mats are very memory expensive. Lets reuse this Mat.
+
+			while (true) {
+				// Tell the CvSink to grab a frame from the camera and
+				// put it
+				// in the source mat.  If there is an error notify the
+				// output.
+				if (cvSink.GrabFrame(mat) == 0) {
+					// Send the output the error.
+					outputStream.NotifyError(cvSink.GetError());
+					// skip the rest of the current iteration
+					continue;
+				}
+				// Put a rectangle on the image
+				rectangle(mat, cv::Point(100, 100), cv::Point(400, 400),
+						cv::Scalar(255, 255, 255), 5);
+				// Give the output stream a new image to display
+				outputStream.PutFrame(mat);
+			}
+		}
+
+
 	void RobotInit() {
 		m_chooser.AddDefault(kAutoNameDefault, kAutoNameDefault);
 		m_chooser.AddObject(kAutoNameCustom, kAutoNameCustom);
@@ -35,6 +71,18 @@ public:
 		}
 		m_left.SetSafetyEnabled(false);
 		m_right.SetSafetyEnabled(false);
+
+		camera = CameraServer::GetInstance()->StartAutomaticCapture()
+		camera.SetResolution(640, 480);
+		cvSink = CameraServer::GetInstance()->GetVideo();
+		outputStream = CameraServer::GetInstance()->PutVideo("Rectangle", 640, 480);
+
+		std::thread visionThread(VisionThread);
+				visionThread.detach();
+
+
+
+
 	}
 
 	/*
@@ -136,6 +184,11 @@ private:
 	frc::Spark m_lift{3};
 	frc::Spark m_intake{4};
 	frc::Timer m_timer;
+	cs::UsbCamera camera;
+	cs::CvSink cvSink;
+	cs::CvSource outputStream;
+	cv::Mat mat;
+
 
 	frc::DifferentialDrive m_robotDrive{m_left, m_right};
 
