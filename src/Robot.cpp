@@ -18,70 +18,112 @@
 #include <Joystick.h>
 #include <Buttons/JoystickButton.h>
 #include <Spark.h>
+#include <Victor.h>
 #include <Timer.h>
 #include <DoubleSolenoid.h>
 #include <RobotDrive.h>
 #include <GenericHID.h>
 #include <Drive/DifferentialDrive.h>
+
+
 #include <CameraServer.h>
-
-
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-class Robot : public frc::IterativeRobot {
+#include "WPILib.h"
+#include "ctre/Phoenix.h"
+
+using namespace frc;
+
+class Robot : public IterativeRobot {
+
+
+
+	Talon *m_intakeRight;
+	Talon *m_intakeLeft;
+//	Spark *rightBack;
+//	Spark *rightFront;
+//	Spark *leftFront;
+//	Spark *leftBack;
+
+//	SpeedControllerGroup *left;
+//	SpeedControllerGroup *right;
+//
+//	DifferentialDrive *drivetrain;
+
+
 public:
-	static void VisionThread() {
-			// Get the USB camera from CameraServer
-			// Set the resolution
 
-			// Get a CvSink. This will capture Mats from the Camera
-			// Setup a CvSource. This will send images back to the Dashboard
 
-			// Mats are very memory expensive. Lets reuse this Mat.
 
-			while (true) {
-				// Tell the CvSink to grab a frame from the camera and
-				// put it
-				// in the source mat.  If there is an error notify the
-				// output.
-				if (cvSink.GrabFrame(mat) == 0) {
-					// Send the output the error.
-					outputStream.NotifyError(cvSink.GetError());
-					// skip the rest of the current iteration
-					continue;
-				}
-				// Put a rectangle on the image
-				rectangle(mat, cv::Point(100, 100), cv::Point(400, 400),
-						cv::Scalar(255, 255, 255), 5);
-				// Give the output stream a new image to display
-				outputStream.PutFrame(mat);
-			}
+	Joystick rightJoystick;
+	Joystick leftJoystick;
+	Joystick controller;
+
+
+
+//	DigitalInput limitSwitchUp;
+//	DigitalInput limitSwitchDown;
+
+	TalonSRX m_intakeBack;
+	TalonSRX m_lift;
+
+	frc::Spark rightBack{1};
+		frc::Spark leftBack{3};
+		frc::Spark rightFront{0};
+		frc::Spark leftFront{2};
+
+//
+//	  frc::SpeedControllerGroup m_left{leftFront, leftBack};
+//
+//	  frc::SpeedControllerGroup m_right{rightFront, rightBack};
+//
+//	  frc::DifferentialDrive m_drive{m_left, m_right};
+//
+
+
+	Robot():
+//		limitSwitchUp(0),
+//		limitSwitchDown(1),
+		leftJoystick(0),
+		rightJoystick(1),
+		controller(2),
+		m_lift(59),
+		m_intakeBack(0)
+
+		{
+
+		m_timer.Start();
+//		m_drive.SetExpiration(0.1);
+
+		m_intakeRight = new Talon(4);
+		m_intakeLeft = new Talon(5);
+//		rightBack = new Spark(1);
+//		leftBack = new Spark(3);
+//		rightFront = new Spark(0);
+//		leftFront = new Spark(2);
+//
+//		right = new SpeedControllerGroup(rightFront, rightBack);
+//		left = new SpeedControllerGroup(leftFront, leftBack);
+//
+//
+//		drivetrain = new DifferentialDrive(right, left);
+
 		}
 
 
 	void RobotInit() {
+
+//		limitSwitchUp = DigitalInput(0);
+//		limitSwitchDown = DigitalInput(1);
 		m_chooser.AddDefault(kAutoNameDefault, kAutoNameDefault);
 		m_chooser.AddObject(kAutoNameCustom, kAutoNameCustom);
-		frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
-		for (std::size_t i = 0; i < arrX.size(); i++) {
-			arrX[i] = 0.0;
-			arrY[i] = 0.0;
-		}
-		m_left.SetSafetyEnabled(false);
-		m_right.SetSafetyEnabled(false);
+		SmartDashboard::PutData("Auto Modes", &m_chooser);
 
-		camera = CameraServer::GetInstance()->StartAutomaticCapture()
-		camera.SetResolution(640, 480);
-		cvSink = CameraServer::GetInstance()->GetVideo();
-		outputStream = CameraServer::GetInstance()->PutVideo("Rectangle", 640, 480);
 
 		std::thread visionThread(VisionThread);
-				visionThread.detach();
-
-
-
+		visionThread.detach();
 
 	}
 
@@ -100,20 +142,25 @@ public:
 	 * well.
 	 */
 	void AutonomousInit() override {
-		m_timer.Reset();
-		m_timer.Start();
-		m_autoSelected = m_chooser.GetSelected();
+//		m_timer.Reset();
+//		m_timer.Start();
+//		m_autoSelected = m_chooser.GetSelected();
 		// m_autoSelected = SmartDashboard::GetString(
 		// 		"Auto Selector", kAutoNameDefault);
-		std::cout << "Auto selected: " << m_autoSelected << std::endl;
+		//std::cout << "Auto selected: " << m_autoSelected << std::endl;
 
-		if (m_autoSelected == kAutoNameCustom) {
-			// Custom Auto goes here
-		} else {
-			// Default Auto goes here
+//		if (m_autoSelected == kAutoNameCustom) {
+//			// Custom Auto goes here
+//		} else {
+//			// Default Auto goes here
 
+	//}
 
-		}
+		std::string gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+//		if (gameData.length > 0) {
+//			if (gameData)
+//		}
+
 	}
 
 	void AutonomousPeriodic() {
@@ -121,9 +168,9 @@ public:
 			// Custom Auto goes here
 		} else {
 			// Default Auto goes here
-			if (m_timer.Get() < 5.0) {
-							m_robotDrive.ArcadeDrive(0.5,0.0);
-						}
+//			if (m_timer.Get() < 5.0) {
+//							m_robotDrive.ArcadeDrive(0.5,0.0);
+						//}
 		}
 	}
 
@@ -134,89 +181,151 @@ public:
 	}
 
 	void TeleopPeriodic() {
-		double limit = m_joystick.GetRawAxis(3) + 1.0;
-		double speedY = m_joystick.GetY();
-		double speedX = m_joystick.GetX();
+//		m_right.Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, squareDrive(rightJoystick.GetY()));
+//		m_left.Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, squareDrive(rightJoystick.GetY()));
 
-
-		arrX = pushAndPop(arrX, speedX);
-		arrY = pushAndPop(arrY, speedY);
-
-
-		speedX = average(arrX);
-		speedY= average(arrY);
-
-		std::cout << speedX << std::endl;
-		std::cout << speedY << std::endl;
 
 //		stopWatch.Delay(0.005);
 
-		//m_robotDrive.ArcadeDrive(limit * 0.5 * speedY, limit * 0.5 * speedX);
-		m_robotDrive.TankDrive(m_joystick.GetY(),m_controller.GetY());
-//		m_lift.Set(m_controller.GetRawAxis(5));
-//		if (m_controller.GetRawButton(6)) {
-//		p_lift.Set(frc::DoubleSolenoid::kForward);
-//		} else if (m_controller.GetRawButton(7)) {
-//		p_lift.Set(frc::DoubleSolenoid::kReverse);
-//		}
-//		m_intake.Set(m_controller.GetRawAxis(3));
+		//drivetrain.ArcadeDrive(squareDrive(rightJoystick.GetY()),squareDrive(rightJoystick.GetX()));
+		//m_robotDrive.TankDrive(m_joystick.GetY(),m_controller.GetY());
+		//m_lift.Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, squareDrive(leftJoystick.GetRawAxis(5)));
 
+
+
+
+//		DifferentialDrive drivetrain{right, left};
+//
+//	drivetrain.ArcadeDrive(rightJoystick.GetY(), rightJoystick.GetX());
+	rightFront.Set(squareDrive(rightJoystick.GetY()));
+	rightBack.Set(squareDrive(rightJoystick.GetY()));
+
+	leftFront.Set(-squareDrive(leftJoystick.GetY()));
+
+	leftBack.Set(-squareDrive(leftJoystick.GetY()));
+
+//
+//	rightFront.Set(squareDrive(controller.GetRawAxis(1)));
+//		rightBack.Set(squareDrive(controller.GetRawAxis(2)));
+//
+//		leftFront.Set(squareDrive(controller.GetRawAxis(3)));
+//
+//		leftBack.Set(squareDrive(controller.GetRawAxis(4)));
+
+
+
+
+		if (controller.GetRawButton(4)) {
+		p_lift2.Set(DoubleSolenoid::kReverse);
+		} else if (controller.GetRawButton(1)) {
+		p_lift2.Set(DoubleSolenoid::kForward);
+		} else if (controller.GetRawButton(2)) {
+		p_lift.Set(DoubleSolenoid::kForward);
+		} else if (controller.GetRawButton(3)) {
+		p_lift.Set(DoubleSolenoid::kReverse);
+	}
+
+//		while (limitSwitchUp.Get()) {
+		m_lift.Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, controller.GetRawAxis(1));
+		m_intakeBack.Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, controller.GetRawAxis(5));
+		m_intakeRight->Set(controller.GetRawAxis(5));
+		m_intakeLeft->Set(controller.GetRawAxis(5));
+
+
+		//}
+
+		// intake is 6 on controller
+		// outake is 5 on controller
 
 	}
 
-	void TestPeriodic() {}
+	void TestPeriodic() {
+
+	}
 
 private:
-	frc::LiveWindow& m_lw = *LiveWindow::GetInstance();
-	frc::SendableChooser<std::string> m_chooser;
+
+	float squareDrive(float val) {
+
+		if (val > 0.0) {
+			val = val*val;
+			return val;
+		}
+		else if (val < 0.0) {
+			val = -(val*val);
+			return val;
+		} else {
+			return 0;
+		}
+	}
+
+	static void VisionThread() {
+				// Get the USB camera from CameraServer
+				cs::UsbCamera camera =
+						CameraServer::GetInstance()
+								->StartAutomaticCapture();
+				// Set the resolution
+				camera.SetResolution(640, 480);
+
+				// Get a CvSink. This will capture Mats from the Camera
+				cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
+				// Setup a CvSource. This will send images back to the Dashboard
+				cs::CvSource outputStream =
+						CameraServer::GetInstance()->PutVideo(
+								"Rectangle", 640, 480);
+
+				// Mats are very memory expensive. Lets reuse this Mat.
+				cv::Mat mat;
+
+				while (true) {
+					// Tell the CvSink to grab a frame from the camera and
+					// put it
+					// in the source mat.  If there is an error notify the
+					// output.
+					if (cvSink.GrabFrame(mat) == 0) {
+						// Send the output the error.
+						outputStream.NotifyError(cvSink.GetError());
+						// skip the rest of the current iteration
+						continue;
+					}
+					// Put a rectangle on the image
+					rectangle(mat, cv::Point(100, 100), cv::Point(400, 400),
+							cv::Scalar(255, 255, 255), 5);
+					// Give the output stream a new image to display
+					outputStream.PutFrame(mat);
+				}
+	}
+
+	LiveWindow& m_lw = *LiveWindow::GetInstance();
+	SendableChooser<std::string> m_chooser;
 	const std::string kAutoNameDefault = "Default";
 	const std::string kAutoNameCustom = "My Auto";
 	std::string m_autoSelected;
 
-	frc::Joystick m_joystick{0};
-	frc::JoystickButton j_12{&m_joystick, 12};
-	frc::Joystick m_controller{1};
-	frc::JoystickButton c_6{&m_controller, 6};
-//	frc::DoubleSolenoid p_lift{1, 2};
+//	Spark p_lift{2};
 
-	frc::Spark m_left{1};
-	frc::Spark m_right{2};
-	frc::Spark m_lift{3};
-	frc::Spark m_intake{4};
-	frc::Timer m_timer;
-	cs::UsbCamera camera;
-	cs::CvSink cvSink;
-	cs::CvSource outputStream;
-	cv::Mat mat;
+//
 
 
-	frc::DifferentialDrive m_robotDrive{m_left, m_right};
 
-	std::array< double, 1000> arrX;
-	std::array< double, 1000> arrY;
 
-	std::array<double, 1000> pushAndPop(std::array<double, 1000> arr, double value ) {
+//	Joystick m_joystick{0};
+//	JoystickButton j_12{&m_joystick, 12};
+//	Joystick m_controller{1};
+//	JoystickButton c_6{&m_controller, 6};
+	DoubleSolenoid p_lift{0,1};
+	DoubleSolenoid p_lift2{2,3};
+	Timer m_timer;
 
-			for(std::size_t i = 1; i < arr.size(); i++) {
-				arr[i] = arr[i-1];
-			}
-			arr[0] = value;
 
-			return arr;
-		}
 
-	double average(std::array<double, 1000> arr) {
-		double sum = 0.0;
-		 for (std::size_t i = 0; i < arr.size(); i++) {
-		        sum += arr[i];
-		    }
 
-		    return sum / arr.size();
-	}
+
 
 
 
 
 };
 
-START_ROBOT_CLASS(Robot)
+START_ROBOT_CLASS(Robot);
+
